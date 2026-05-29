@@ -180,3 +180,117 @@ BOTTLENECK 3 — Bước 6: Dò lại tìm bill trùng khi lệch (30–40') ←
 | **Impact** | Quản lý mất 65–115 phút/ca cho công việc có thể tự động hóa; sai số tài chính xảy ra thường xuyên; thường phải làm sau 22–23h ảnh hưởng giờ nghỉ |
 | **Success Metric** | Giảm thời gian đối chiếu từ ~90 phút xuống dưới 15 phút/ca; tỷ lệ sai số tài chính do nhập tay giảm về 0 với ảnh chất lượng tốt |
 | **Boundary** | Chỉ xử lý ảnh bill chuyển khoản gửi qua Zalo của một ca / một cửa hàng; không xử lý tổng hợp đa chi nhánh; không thay thế bước quản lý xác nhận cuối cùng |
+
+# Phase 6 — Rule / Workflow / Agent + Decision
+
+## Bước 6.0 — Ma trận độ phù hợp với AI
+
+|  | Độ mơ hồ thấp | Độ mơ hồ cao |
+|---|---|---|
+| **Độ phức tạp thấp** | Rule hoặc workflow đơn giản thường đủ | Workflow có AI hỗ trợ một bước có thể đủ |
+| **Độ phức tạp cao** | **← Bài toán này nằm ở đây** | Agent có thể phù hợp, nhưng cần boundary, người thật kiểm tra và phương án quay về rất rõ |
+
+**Tự kiểm nhanh:**
+
+| Câu hỏi | Đánh giá | Lý do |
+|---|---|---|
+| Output có thể khác nhau mỗi lần mà vẫn chấp nhận được không? | Độ mơ hồ **thấp** | Số tiền và mã giao dịch chỉ có một đáp án đúng — bill trùng là trùng, sai số là sai số |
+| Cần phối hợp 3+ bước hoặc 3+ nguồn dữ liệu không? |  Độ phức tạp **cao** | 7 bước workflow, 3 nguồn dữ liệu: ảnh Zalo + Excel + app ngân hàng. Bước sau phụ thuộc kết quả bước trước |
+| AI có cần tự quyết định bước tiếp theo không? | Không | Luồng cố định: OCR → dedup → flag exception → human review. Không có nhánh nào cần AI tự lập kế hoạch |
+
+**Bài toán của nhóm nằm ở ô nào?**
+
+> Độ mơ hồ THẤP × Độ phức tạp CAO
+
+**Vì sao?**
+
+> Theo ma trận: Workflow điều phối nhiều bước rõ ràng — chưa chắc cần Agent.
+
+---
+
+## Bước 6.1 — So sánh Rule / Workflow / Agent
+
+| Mức | Phương án cụ thể cho bài toán | Khi nào đủ | Rủi ro | Chọn? |
+|---|---|---|---|---|
+| **Rule** | Script regex đọc SMS banking, so khớp số tiền + mã giao dịch theo pattern cố định | Đủ nếu 100% giao dịch đến từ 1 ngân hàng, SMS format chuẩn không đổi, không có ảnh Zalo | Vỡ ngay khi nhân viên gửi ảnh chụp màn hình. Không xử lý được ảnh mờ, góc lệch, nhiều ngân hàng. VietQR Pro (Phase 4.2) giải được nếu dùng QR động từ đầu — nhưng không áp dụng cho workflow Zalo đang có | Không |
+| **Workflow** | OCR (Vision AI) quét ảnh → trích xuất structured data → dedup tự động theo mã giao dịch → flag exception → quản lý review bill mờ / bill trùng → export Excel | Đủ vì luồng tuần tự cố định, output mỗi bước xác định, AI không cần ra quyết định kinh doanh, human giữ boundary ở bước review cuối | OCR đọc sai ảnh mờ / chụp nghiêng. Cần fallback: QL nhập tay dòng lỗi, không block toàn bộ flow | Có |
+| **Agent** | AI tự quyết định khi nào hỏi lại nhân viên, khi nào gọi thêm tool, khi nào tự điền Excel và gửi báo cáo | Phù hợp nếu workflow thay đổi nhiều theo ngữ cảnh, có nhiều ngoại lệ khó dự đoán | Over-engineer: luồng 7 bước đã cố định. Rủi ro cao nhất: Agent tự ghi sai số liệu tài chính mà không có human check — không thể chấp nhận với bài toán đối soát doanh thu | Không |
+
+**Rule có giải được 70–80% case không?**
+Không. Input là ảnh chụp màn hình giao dịch gửi qua Zalo — đa dạng về ngân hàng, chất lượng ảnh, góc chụp. Rule chỉ đọc được SMS text chuẩn định dạng.
+
+**Workflow có đủ vì các bước khá rõ không?**
+Có. 7 bước đã mapping rõ (Phase 5.1), bottleneck xác định, output mỗi bước xác định. OCR giải Bước 3+4, dedup giải Bước 6 — đúng hai điểm đau nhất theo interview.
+
+**Có thật sự cần Agent tự lập kế hoạch không?**
+Không. Luồng không thay đổi dù input khác nhau. Quyết định duy nhất cần "trí tuệ" là: ảnh này có đọc được không — đây là confidence score của OCR, không phải lập kế hoạch.
+
+**Nếu AI sai, ai phát hiện và sửa?**
+Quản lý ca — bước "review exception" là human boundary bắt buộc. Cả 3 người phỏng vấn đều mong muốn "tự động hóa bước đọc ảnh và phát hiện trùng lặp", không phải "AI tự chốt sổ".
+
+**Có thể hạ mức từ Workflow về Rule không?**
+Không — input ảnh đa dạng loại bỏ Rule.
+
+**Mức chọn:**
+
+> **Workflow**
+
+**Vì sao chọn:**
+Luồng tuần tự cố định, 3 bottleneck đã xác định (OCR giải Bước 3+4, dedup giải Bước 6), AI không cần ra quyết định kinh doanh, human giữ boundary ở bước xác nhận cuối. Kỹ thuật đã có sẵn (GMO SmartOCR / Google Vision + Python fuzzy matching — Phase 4.2).
+
+**Vì sao không chọn mức đơn giản hơn (Rule):**
+Input là ảnh Zalo đa dạng, không phải SMS text chuẩn. Rule không xử lý được.
+
+**Vì sao không chọn Agent:**
+Luồng cố định, không cần tự lập kế hoạch. Rủi ro Agent tự ghi sai số liệu tài chính không thể chấp nhận — không có lý do xứng đáng để tăng rủi ro.
+
+---
+
+## Bước 6.2 — Problem Statement v1
+
+| Field | Nội dung |
+|---|---|
+| **Actor** | Quản lý ca tại cửa hàng F&B / bán lẻ quy mô nhỏ — 1 chi nhánh (scope thu hẹp từ Phase 4.1: không làm tổng hợp đa chi nhánh trong pilot) |
+| **Workflow** | Cuối mỗi ca: nhân viên gửi ảnh bill lên Zalo group → quản lý tải về → OCR tự động trích xuất → dedup flag bill trùng → quản lý review exception (ảnh mờ / bill bị flag) → export Excel chốt ca |
+| **Bottleneck** | Bước 3: đọc ảnh bằng mắt (30') + Bước 4: nhập tay Excel (20') — cùng nguyên nhân gốc, giải bằng OCR. Bước 6: dò lại bill trùng khi lệch tiền (30–40') — bottleneck nghiêm trọng nhất, xảy ra ~3–4 lần/tuần, giải bằng dedup tự động |
+| **Impact** | 65–115 phút/ca cho công việc có thể tự động hóa; sai số tài chính do nhập tay; làm sau 22–23h ảnh hưởng giờ nghỉ |
+| **Success Metric** | Thời gian chốt sổ < 15 phút/ca; tỷ lệ sai số tài chính do nhập tay = 0% với ảnh chất lượng tốt; 100% bill trùng được flag tự động |
+| **Boundary** | Chỉ xử lý ảnh bill chuyển khoản 1 ca / 1 cửa hàng. Không tổng hợp đa chi nhánh. Không thay thế bước quản lý xác nhận cuối — AI chỉ đọc và flag, không tự ghi sổ sách |
+| **AI intervention point** | Bước 3+4: Vision AI / OCR thay mắt người đọc ảnh và tạo structured data. Bước 6: dedup engine (exact match mã giao dịch + fuzzy match số tiền + thời gian) thay bước dò tay |
+| **Mức chọn** | **Workflow** |
+| **Rủi ro & người thật kiểm tra** | OCR sai trên ảnh mờ / góc lệch → fallback: quản lý nhập tay dòng đó, không block toàn flow. Dedup false positive (flag nhầm bill hợp lệ) → quản lý xác nhận trước khi xóa. Owner quy trình: quản lý ca — confirm cuối trước khi export |
+
+---
+
+## Bước 6.3 — Final Decision
+
+| Câu hỏi | Đánh giá | Ghi chú |
+|---|---|---|
+| Actor và workflow đã rõ chưa? |  Yes | Quản lý ca, 7 bước đã mapping chi tiết (Phase 5.1), đã phỏng vấn 3 người xác nhận (Phase 4.1) |
+| Baseline và success metric đã đo được chưa? |  Yes | Baseline 65–115 phút/ca từ interview. Target < 15 phút/ca + 0% sai số nhập tay + 100% dedup — đo được |
+| Có data/input đủ dùng chưa? |  Yes | Ảnh bill Zalo là input sẵn có hàng ngày, dễ lấy mẫu để test OCR ngay |
+| Nếu AI sai, hậu quả có chấp nhận được không? | Yes | AI sai → quản lý nhập tay dòng đó như hiện tại. Không auto-commit tài chính. Worst case = về lại workflow cũ cho dòng lỗi |
+| Có người review / owner vận hành không? |  Yes | Quản lý ca là owner tự nhiên — đây chính là người đang đau nhất với bài toán này |
+| Có cách non-AI đơn giản hơn không? | Not Yet | VietQR Pro giải được nếu chuyển sang QR động từ đầu — nhưng không áp dụng cho workflow Zalo đang có. Google Form đẩy gánh nặng sang nhân viên, interview xác nhận không thực tế khi đông khách |
+
+**Decision:**
+
+> **Go — pilot nhỏ**
+
+**Lý do:**
+Workflow rõ, metric đo được, input sẵn có, human boundary xác định, rủi ro tài chính được kiểm soát vì không auto-commit. Kỹ thuật OCR + dedup đã có sẵn (Phase 4.2), không cần build từ đầu.
+
+**Nếu Go, pilot nhỏ nhất là:**
+
+| Tuần | Việc cần làm |
+|---|---|
+| **Tuần 1** | Thu thập 50–100 ảnh bill thực tế từ Zalo. Chạy OCR (Google Vision hoặc GMO SmartOCR), đo accuracy: bao nhiêu % đọc đúng số tiền, mã giao dịch? |
+| **Tuần 2** | Chạy tool song song với quy trình thủ công hiện tại. Quản lý vẫn chốt tay như cũ, tool chạy độc lập. So sánh kết quả và thời gian |
+
+Ngưỡng quyết định sau pilot: OCR accuracy ≥ 90% trên ảnh chất lượng bình thường → tiếp tục build dedup layer. OCR accuracy < 80% → chuẩn hóa cách chụp ảnh trước rồi test lại.
+
+**Nếu Not Yet, cần validate gì trước:**
+Chất lượng ảnh bill thực tế — nếu > 30% ảnh mờ / góc lệch thì OCR accuracy không đạt ngưỡng, cần chuẩn hóa input trước khi build tool.
+
+**Nếu No-Go, nên làm gì thay AI:**
+Tư vấn cửa hàng chuyển sang VietQR Pro / QR động từ đầu — giải bài toán từ gốc, không cần OCR, không cần dedup.
