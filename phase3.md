@@ -34,3 +34,149 @@
 | **Intern đọc paper/doc kỹ thuật dài để lấy điểm liên quan đến task** (Đoàn Minh Hiếu) | Actor rõ (intern Data/AI), bottleneck đo được (60-90 phút/lần), xảy ra 2-3 lần/tuần, AI fit cao với bài toán đọc-tổng hợp theo ngữ cảnh task cụ thể. | AI tóm tắt đúng phần liên quan đến task hay chỉ tóm chung chung? Chất lượng output phụ thuộc nhiều vào cách mô tả task — cần test prompt. |
 | **Thuê đồ đạc ngắn hạn** (Lê Nguyễn Minh Quân) | Workflow tìm đồ → hỏi giá → cọc vẽ được rõ. Pain thật — mất thời gian và rủi ro mất tiền cọc. | Đây là bài toán xây platform, không phải AI-first. Cần xác định rõ AI nằm ở bước nào (gợi ý đồ? OCR giấy tờ/CCCD?). Scope quá rộng cho lab hôm nay. |
 | **Tìm nhà thuê xác minh** (Phạm Văn Khánh) | Workflow 2 phía (người thuê + chủ nhà) vẽ được, pain phổ biến và có thể đo bằng thời gian shortlist và số tin nhắn hỏi lại. | KYC phức tạp khó thu hút chủ nhà tham gia. Nếu không có độ phủ thì không có giá trị. Không khả thi khi triển khai production trong phạm vi lab. |
+
+## Bước 3.4 — Score để đồng thuận
+
+| Candidate | Actor rõ | Workflow rõ | Pain có evidence | Impact đo được | Làm trong lab | So sánh R/W/A được | Nhóm hiểu domain | Tổng |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Đối chiếu bill ảnh chuyển khoản | 5 | 5 | 4 | 4 | 4 | 4 | 4 | **30** |
+| Intern đọc paper/doc kỹ thuật | 4 | 4 | 3 | 3 | 5 | 4 | 4 | **27** |
+| Thuê đồ đạc ngắn hạn | 4 | 3 | 3 | 3 | 2 | 2 | 3 | **20** |
+| Tìm nhà thuê xác minh | 3 | 3 | 4 | 3 | 1 | 2 | 3 | **19** |
+
+Nhóm chọn: **Đối chiếu bill ảnh chuyển khoản**.
+
+Lý do chọn:
+
+- Actor và workflow rõ nhất trong 4 candidates — đã có before/after cụ thể trước khi vào phase này.
+- Pain có evidence từ vận hành thực tế, dù chưa có số liệu khảo sát rộng (nên chấm 4 thay vì 5).
+- Impact đo được bằng phút/ca, nhưng baseline 90 phút chủ yếu đến từ một trường hợp quan sát — cần validate thêm (nên chấm 4).
+- Làm trong lab được nhưng phần OCR ảnh mờ cần test thực tế, không thể chốt hoàn toàn trong 4 tiếng (nên chấm 4).
+- So sánh Rule / Workflow / Agent làm được rõ, nhưng quyết định cuối còn phụ thuộc kết quả test OCR (nên chấm 4).
+
+Lý do không chọn các bài còn lại:
+
+- **Intern đọc paper**: Điểm làm trong lab cao nhất vì dễ test prompt ngay, nhưng metric chất lượng output khó đặt ngưỡng rõ — "AI tóm đúng phần liên quan" khó đo hơn "giảm từ 90 phút xuống 15 phút".
+- **Thuê đồ ngắn hạn**: Scope platform quá rộng, AI chưa rõ nằm ở bước nào, không so sánh được Rule/Workflow/Agent trong thời gian lab.
+- **Tìm nhà thuê**: Rủi ro không phải về AI mà về độ phủ và KYC — dù pain thật nhưng không làm được trong lab và không khả thi production.
+
+## Bước 4.1 — Quick Validation (Option A — Quick Interviews)
+
+**Problem:** Đối chiếu bill chuyển khoản cuối ca bằng tay
+**Đối tượng phỏng vấn:** Quản lý ca / Chủ cửa hàng F&B, bán lẻ
+
+| Câu hỏi | Người 1 (Quản lý ca — cửa hàng đơn) | Người 2 (Chủ chuỗi — 2-3 chi nhánh) | Người 3 (Nhân viên kiêm chốt sổ) |
+|---|---|---|---|
+| Lần gần nhất bạn gặp vấn đề này là khi nào? | Tối qua — cuối ca 22h | 2 ngày trước, một trong 3 chi nhánh lệch 200k không tìm ra nguyên nhân | Tuần trước, ca thứ 6 liên tiếp phải làm thủ công |
+| Bạn đang xử lý bằng workflow nào? | Tải ảnh từ Zalo → nhập Excel tay → đối chiếu app ngân hàng | Mỗi chi nhánh tự chốt rồi gửi file lên, mình tổng hợp lại | Nhìn ảnh → gõ vào note điện thoại → chuyển sang Excel hôm sau |
+| Bước nào mất thời gian hoặc khó chịu nhất? | Dò lại tìm bill trùng khi lệch tiền — "như mò kim đáy bể" | Tổng hợp từ 3 file của 3 chi nhánh, format khác nhau | Đọc số trên ảnh chụp mờ, phải zoom to vẫn đoán |
+| Bạn mất khoảng bao lâu? | 60–90 phút/tối | 30–45 phút/chi nhánh × 3 = ~2 tiếng/tối | 45–60 phút, thường làm sau 23h |
+| Nếu tốt hơn, bạn muốn điều gì thay đổi? | Tự động nhận diện bill trùng, không cần nhìn từng ảnh | Một màn hình tổng hợp cả 3 chi nhánh, real-time | Không cần nhập tay — chụp ảnh xong là ra số luôn |
+
+### Tổng hợp nhanh
+
+| Tiêu chí | Kết quả |
+|---|---|
+| Pain có thật không? | Cả 3 gặp hàng ngày / hàng tuần |
+| Tần suất | Mỗi ca làm việc (1–2 lần/ngày) |
+| Thời gian mất | 45–120 phút/người/tối |
+| Bước đau nhất | Nhập liệu tay + dò lại bill trùng khi lệch |
+| Mong muốn chung | Tự động hóa bước đọc ảnh và phát hiện trùng lặp |
+| Tín hiệu đủ để tiếp tục? | Có |
+
+### Kết quả
+
+| Nguồn | Số người / số mẫu | Tín hiệu xác nhận | Tín hiệu phản bác | Nhóm sửa problem thế nào |
+|---|---|---|---|---|
+| Quick interview | 3 | Cả 3 gặp hàng ngày, đều đau ở bước nhập tay và dò bill trùng; baseline thời gian 45–120 phút/tối khớp với ước tính ban đầu | Người 2 (chủ chuỗi) có thêm pain tổng hợp đa chi nhánh — scope rộng hơn bài toán ban đầu | Thu hẹp scope: không làm tổng hợp đa chi nhánh trong pilot; tập trung vào một ca / một cửa hàng trước |
+| Survey / poll | — | — | — | — |
+| Log / review / ticket | — | — | — | — |
+
+## Bước 4.2 — Research giải pháp đã có
+
+| Nguồn / tool / case | Link | Họ giải quyết phần nào? | Điểm mạnh | Khoảng trống / rủi ro | Bài học cho nhóm |
+|---|---|---|---|---|---|
+| **VietQR Pro / payOS** — Nền tảng đối soát thanh toán tự động dành cho doanh nghiệp Việt Nam | [payos.vn/vietqr-pro](https://payos.vn/vietqr-pro/) | Xác nhận giao dịch real-time qua QR động, tiền về thẳng tài khoản kèm mã đơn hàng → đối soát tự động hoàn toàn nếu toàn bộ giao dịch đi qua hệ thống | Không cần OCR, không cần nhập tay, đối soát tức thì, phí thấp (~1.500đ/giao dịch), tích hợp được với CRM/ERP | Chỉ hoạt động nếu khách dùng QR động — không giải quyết được bill ảnh chụp từ nhân viên gửi trên Zalo (giao dịch đã xảy ra, không đi qua hệ thống) | Nếu cửa hàng có thể chuyển sang VietQR Pro từ đầu → bài toán không tồn tại. Nhưng với cửa hàng đang có workflow Zalo → cần giải pháp xử lý ảnh bill đã chụp |
+| **GMO SmartOCR (RUNSYSTEM)** — Giải pháp OCR tiếng Việt, xử lý hóa đơn, chứng từ tài chính | [runsystem.net](https://runsystem.net/en/news/no-1-vietnamese-handwriting-ocr-solution-market) | Trích xuất dữ liệu từ ảnh chứng từ tài chính (hóa đơn, phiếu thanh toán, biên lai) — đúng bước 2–3 trong workflow hiện tại | Hỗ trợ tiếng Việt tốt, xử lý được ảnh mờ/nghiêng, độ chính xác cao cho tài liệu tài chính | Là giải pháp enterprise, cần tích hợp API — không có sản phẩm self-serve sẵn cho quản lý cửa hàng nhỏ. Không có tính năng phát hiện bill trùng | OCR tiếng Việt đã được giải tốt ở Việt Nam. Phần cần build thêm là lớp duplicate detection và export ra Excel/báo cáo ca |
+| **AI Accountant / reconciliation automation** — Pattern phát hiện giao dịch trùng lặp dùng AI + confidence score | [aiaccountant.com](https://www.aiaccountant.com/blog/detect-duplicate-bank-transactions) | Sau khi có dữ liệu structured (từ OCR hoặc bank feed), dùng pattern matching để flag bill trùng theo mã giao dịch + số tiền + thời gian — đúng bước 5 (dò lại lỗi) | Tự động hóa bước tốn thời gian nhất, có confidence score để phân loại "chắc chắn trùng" vs "cần human review" | Giải pháp này assume input đã là structured data — không xử lý ảnh Zalo thô. Cần kết hợp với OCR trước | Workflow lý tưởng = OCR (trích xuất) → Duplicate detection (flag trùng) → Human review chỉ những case low-confidence. Đây là thiết kế cần hướng đến |
+| **Python reconciliation automation** — Pattern dùng fuzzy matching để đối soát bank statement | [trymito.io](https://www.trymito.io/blog/how-to-automate-reconciliations-in-python-a-complete-guide) | Sau khi có CSV từ OCR, dùng exact match + fuzzy match để tìm giao dịch trùng hoặc gần trùng (cùng số tiền, gần cùng thời điểm) | Open source, customizable, không cần vendor lock-in, dễ export Excel | Cần người biết code để set up. Không có UI cho quản lý ca dùng trực tiếp | Có thể dùng làm backend logic cho tool nhóm build — phần OCR lấy data, phần Python xử lý duplicate, phần UI dành cho quản lý |
+
+
+### Nhận xét tổng hợp
+
+| Bước trong workflow | Đã có giải pháp? | Khoảng trống |
+|---|---|---|
+| Bước 1: Tải ảnh từ Zalo | Thủ công hoàn toàn | Cần tích hợp Zalo API hoặc upload thủ công vào tool |
+| Bước 2–3: Đọc ảnh + nhập liệu | OCR giải tốt (GMO, Google Vision, Tesseract) | Cần fine-tune cho layout bill chuyển khoản VN |
+| Bước 4: Đối chiếu tổng | Nếu dùng VietQR Pro từ đầu | Không áp dụng cho workflow ảnh Zalo đã có sẵn |
+| **Bước 5: Dò lại bill trùng** | Có pattern nhưng chưa có tool đóng gói sẵn cho SMB Việt Nam | **Đây là khoảng trống thực sự cần build** |
+| Export báo cáo ca | Cần custom | Chưa có tool nào làm end-to-end cho use case này |
+
+# Phase 5 — Workflow + Problem Statement
+
+## Bước 5.1 — Current workflow bản nhóm
+
+Workflow:
+
+![Current workflow](02-group-problem-workflow-card01.png)
+
+| Bước | Actor | Input | Output | Thời gian / Tần suất | Ghi chú |
+|---|---|---|---|---|---|
+| 1 | Nhân viên | Màn hình xác nhận giao dịch trên app ngân hàng | Ảnh chụp bill gửi lên Zalo group | ~1–2 phút/bill, liên tục trong ca | Gửi rải rác cả ca, không theo thứ tự — dễ bị trùng nếu nhân viên gửi lại |
+| 2 | Quản lý ca | Ảnh bill trên Zalo group | Toàn bộ ảnh tải về máy/điện thoại | 5 phút / 1 lần cuối ca | Phải tải thủ công, không có batch download tự động |
+| 3 | Quản lý ca | Từng file ảnh | Số tiền + mã giao dịch đọc bằng mắt | 30 phút / 1 lần — **bottleneck** | Ảnh mờ, chụp nghiêng, ánh sáng kém → đọc sai; mã giao dịch dài dễ nhầm số |
+| 4 | Quản lý ca | Số liệu đọc từ ảnh | Bảng Excel với từng dòng giao dịch | 20 phút / 1 lần — **bottleneck** | Nhập tay hoàn toàn; không có validation → sai số, sai mã, bỏ sót dòng |
+| 5 | Quản lý ca | Excel + app ngân hàng | Tổng đối chiếu khớp / lệch | 5–10 phút / 1 lần | Nếu khớp → xong. Nếu lệch → sang bước 6 |
+| 6 | Quản lý ca | Toàn bộ ảnh + Excel | Xác định bill trùng / nhập sai | 30–40 phút / xảy ra ~3–4 lần/tuần — **bottleneck nghiêm trọng nhất** | Phải mở lại từng ảnh, so sánh mã giao dịch thủ công; không có tool hỗ trợ |
+| 7 | Quản lý ca | Excel đã sửa | File báo cáo ca lưu trữ | 5 phút / 1 lần | Thường xong sau 22–23h, ảnh hưởng giờ nghỉ |
+
+**Bottleneck chính:**
+
+```text
+BOTTLENECK 1 — Bước 3: Đọc ảnh bằng mắt (30')
+  Nguyên nhân: Không có OCR, phụ thuộc hoàn toàn vào mắt người
+  Hậu quả: Nhập sai số tiền, bỏ sót giao dịch
+
+BOTTLENECK 2 — Bước 4: Nhập liệu tay vào Excel (20')
+  Nguyên nhân gốc: Cùng với Bước 3 — không có structured data từ ảnh
+  Hậu quả: Sai số, không audit trail, không thể tự động detect trùng
+  Lưu ý: Bước 3 và 4 cùng một nguyên nhân gốc — giải OCR là xử lý được cả hai
+
+BOTTLENECK 3 — Bước 6: Dò lại tìm bill trùng khi lệch (30–40') ← NGHIÊM TRỌNG NHẤT
+  Nguyên nhân: Không có hệ thống flag duplicate tự động
+  Hậu quả: Tốn thời gian nhất, gây stress, xảy ra thường xuyên
+  Dấu hiệu: Nhân viên hay gửi lại ảnh khi không chắc đã gửi chưa
+             → cùng mã giao dịch xuất hiện 2 lần trong Zalo group
+```
+
+**Baseline tổng kết:**
+
+| Kịch bản | Thời gian ước tính |
+|---|---:|
+| Ca bình thường (không lệch) | ~65–75 phút |
+| Ca có lệch tiền (~3–4 lần/tuần) | ~95–115 phút |
+
+## Bước 5.2 — Future workflow bản nhóm
+
+![Future workflow](02-group-problem-workflow-card02.png)
+
+**Before/after impact:**
+
+| Metric | Trước | Sau kỳ vọng | Ghi chú |
+|---|---:|---:|---|
+| Số bước | 7 | 6 | Gộp bước đọc + nhập vào 1 bước OCR tự động |
+| Tổng thời gian | ~90 phút | ~9 phút | Giảm 90%, chủ yếu nhờ bỏ bước đọc tay + nhập Excel |
+| Số bước thủ công | 5 | 1 | Chỉ còn review exception — ảnh mờ hoặc bill bị flag |
+| Bottleneck chính | Đọc ảnh + nhập tay (50') + dò lại (40') | Review exception (4') | Con người chỉ xử lý case AI không chắc chắn |
+| Risk mới | — | OCR đọc sai ảnh mờ / chụp nghiêng | Cần fallback rõ ràng: QL nhập tay dòng lỗi; không block toàn bộ flow |
+
+## Bước 5.3 — Problem Statement v0
+
+| Field | Nội dung |
+|---|---|
+| **Actor** | Quản lý ca tại cửa hàng F&B / bán lẻ quy mô nhỏ (1 chi nhánh) |
+| **Workflow** | Cuối mỗi ca, quản lý tải ảnh bill chuyển khoản từ Zalo group, đọc tay từng ảnh, nhập Excel thủ công, đối chiếu tổng với app ngân hàng, dò lại bill trùng khi lệch tiền |
+| **Bottleneck** | Đọc ảnh bằng mắt (30') + nhập tay Excel (20') + dò lại bill trùng khi lệch (30–40') — tổng 80–90 phút/ca, xảy ra mỗi ngày |
+| **Impact** | Quản lý mất 65–115 phút/ca cho công việc có thể tự động hóa; sai số tài chính xảy ra thường xuyên; thường phải làm sau 22–23h ảnh hưởng giờ nghỉ |
+| **Success Metric** | Giảm thời gian đối chiếu từ ~90 phút xuống dưới 15 phút/ca; tỷ lệ sai số tài chính do nhập tay giảm về 0 với ảnh chất lượng tốt |
+| **Boundary** | Chỉ xử lý ảnh bill chuyển khoản gửi qua Zalo của một ca / một cửa hàng; không xử lý tổng hợp đa chi nhánh; không thay thế bước quản lý xác nhận cuối cùng |
